@@ -1,7 +1,7 @@
 # 深度登记 · 雪后清道核量台
 
 - 规模：中型
-- 核心规则：按方向及有效作业窗口做线性里程区间并集，覆盖优先于有界缺证。
+- 核心规则：按方向及有效作业窗口做线性里程区间并集，覆盖优先于有界缺证。结算按区间归属裁定：自营凭线路册责任班组与车辆名册，跨班组凭支援单；未核清只列待复核。
 - 使用者：养护夜班领班按方向复核除雪里程，交接未扫路段与疑似定位缺口。
 
 ## 功能模块
@@ -15,6 +15,7 @@
 | M5 覆盖合并 | 展开覆盖、待扫及缺证区间的证据 | `GET /api/coverage/{sample}` | `app/modules/m5_coverage/sweep.py` | `tests/test_coverage.py` |
 | M6 缺扫对账 | 查逐方向差额及全部判定记录 | `GET /api/reconcile/{sample}` | `app/modules/m6_reconcile/ledger.py` | `tests/test_reconcile.py` |
 | M7 工单凭证 | 重算、签收并下载冻结证据 | `POST /api/runs` | `app/modules/m7_archive/service.py` | `tests/test_archive.py` |
+| M8 班组结算 | 裁定分段归属，形成可结算量与待复核清单 | `GET /api/settle/{sample}` | `app/modules/m8_settle/service.py` | `tests/test_settle.py` |
 
 ## 陷阱登记
 
@@ -31,3 +32,7 @@
 | TRAP-23 | 临界时刻恰好接触窗口 | 增加虚假交集 | 半开窗口边界 | `app/modules/m4_windows/intervals.py` | `tests/test_windows.py::test_half_open_contact_has_no_distance` |
 | TRAP-25 | 脏样例两作业窗口重叠 | 同段两次采信 | 时间窗口归并 | `app/modules/m4_windows/service.py` | `tests/test_windows.py::test_windows_unioned_without_doubling` |
 | TRAP-26 | 签收提交带陈旧摘要 | 签错快照 | 返回冲突 | `app/modules/m7_archive/service.py` | `tests/test_archive.py::test_signature_requires_current_digest` |
+| TRAP-27 | 外援无支援单在本区作业 | 按车辆毛里程计费 | 只列待复核，不计结算 | `app/modules/m8_settle/attribute.py` | `tests/test_settle.py::test_support_without_dispatch_goes_to_review` |
+| TRAP-28 | 同一区间多班组覆盖 | 随意归属一方 | 归属冲突待裁定 | `app/modules/m8_settle/attribute.py` | `tests/test_settle.py::test_shared_interval_attribution_conflict` |
+| TRAP-29 | 名册同键定义冲突 | 后写覆盖 | 冲突双方皆隔离 | `app/modules/m8_settle/registry.py` | `tests/test_settle.py::test_conflicting_vehicle_registry_quarantined` |
+| TRAP-30 | 同批重跑或断点续跑 | 重复计价或改归属 | 内容寻址复用，已核归属不变 | `app/modules/m7_archive/service.py` | `tests/test_settle.py::test_rerun_keeps_verified_attribution` |

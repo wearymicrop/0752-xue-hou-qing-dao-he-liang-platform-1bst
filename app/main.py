@@ -12,6 +12,7 @@ from .modules.m4_windows import handler as windows
 from .modules.m5_coverage import handler as coverage
 from .modules.m6_reconcile import handler as reconcile
 from .modules.m7_archive import handler as archive
+from .modules.m8_settle import handler as settle
 from .store import Ledger
 from .web import router as web
 
@@ -25,7 +26,7 @@ def create_app(path=None):
     application = FastAPI(title=TITLE, lifespan=lifespan)
     application.add_exception_handler(DomainError, respond)
     application.mount("/static", StaticFiles(directory=ROOT / "app" / "static"), name="static")
-    for module in (routes, tracks, projection, windows, coverage, reconcile, archive):
+    for module in (routes, tracks, projection, windows, coverage, reconcile, settle, archive):
         application.include_router(module.router)
     application.include_router(web)
 

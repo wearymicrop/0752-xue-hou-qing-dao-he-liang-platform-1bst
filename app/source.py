@@ -7,8 +7,10 @@ from .errors import DomainError
 from .records import entry, token
 
 
-def validate(document, tables):
-    if not isinstance(document, dict) or set(document) != {"batch", "at", *tables}:
+def validate(document, tables, optional=()):
+    required = {"batch", "at", *tables}
+    if (not isinstance(document, dict) or not required <= set(document)
+            or not set(document) <= required | set(optional)):
         raise DomainError("BAD_SCHEMA", "批次字段错误，请对照样例")
     if not token(document["batch"]):
         raise DomainError("BAD_BATCH", "请输入批次号")
@@ -19,8 +21,10 @@ def validate(document, tables):
         raise DomainError("BAD_VALUE", "请检查日期和数据格式") from error
     if len(encoded) > 3_000_000:
         raise DomainError("SOURCE_LIMIT", "批次超过三兆字节", 413)
-    for name in tables:
-        rows = document[name]
+    for name in (*tables, *optional):
+        rows = document.get(name)
+        if rows is None:
+            continue
         if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
             raise DomainError("BAD_TABLE", f"{name} 必须为记录数组")
         if len(rows) > MAX_ROWS:
@@ -43,4 +47,4 @@ def choose(body):
 
 
 def lines(document, table):
-    return (entry(table, number, row) for number, row in enumerate(document[table], 1))
+    return (entry(table, number, row) for number, row in enumerate(document.get(table, []), 1))

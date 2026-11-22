@@ -5,14 +5,17 @@ from app.source import lines
 def parse(record):
     raw = record["raw"]
     axis = raw.get("axis")
+    team = raw.get("team")
     length, start, end = (raw.get(key) for key in ("length_m", "from_m", "to_m"))
     if (not token(raw.get("road")) or not token(raw.get("name")) or raw.get("direction") not in ("+", "-")
+            or not (team is None or token(team))
             or not isinstance(axis, list) or len(axis) != 4
             or any(not integer(value, -100_000, 100_000) for value in axis)
             or axis[:2] == axis[2:] or not all(integer(value) for value in (length, start, end))
             or not 0 <= start < end <= length <= 100_000):
         return None
-    return {**record, **{key: raw[key] for key in ("road", "name", "direction", "axis", "length_m", "from_m", "to_m")}}
+    return {**record, "team": team,
+            **{key: raw[key] for key in ("road", "name", "direction", "axis", "length_m", "from_m", "to_m")}}
 
 
 def build(source, _sections):
@@ -25,7 +28,7 @@ def build(source, _sections):
             valid.append(row)
     roads = []
     for group in group_by(valid, "road", "direction").values():
-        signature = {(tuple(row["axis"]), row["length_m"], row["from_m"], row["to_m"]) for row in group}
+        signature = {(tuple(row["axis"]), row["length_m"], row["from_m"], row["to_m"], row["team"]) for row in group}
         if len(signature) > 1:
             problems.extend(issue(row, "ROAD_CONFLICT", "同一行车方向的责任定义冲突") for row in group)
             continue

@@ -1,6 +1,6 @@
 def test_all_preview_sections_match_archive(client):
     run = client.post('/api/runs',json={'sample':'dirty'}).json()
-    for name in ('routes','tracks','projection','windows','coverage','reconcile'):
+    for name in ('routes','tracks','projection','windows','coverage','reconcile','settle'):
         response = client.get(f'/api/{name}/dirty')
         assert response.status_code == 200 and response.json() == run['result'][name]
 

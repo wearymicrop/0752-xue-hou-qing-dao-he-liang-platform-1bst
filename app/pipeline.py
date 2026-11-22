@@ -1,10 +1,10 @@
 from .config import RULESET
 from .source import load_sample, validate
-from .workflow import STAGES, TABLES
+from .workflow import OPTIONAL_TABLES, STAGES, TABLES
 
 
 def evaluate(document, through=None):
-    source = validate(document, TABLES)
+    source = validate(document, TABLES, OPTIONAL_TABLES)
     sections = {}
     for name, stage in STAGES:
         sections[name] = stage(source, sections)
